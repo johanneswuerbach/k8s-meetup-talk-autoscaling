@@ -2,4 +2,4 @@
 
 Demo application for the Kubernetes Autoscaling talk.
 
-Slides: https://www.slideshare.net/secret/h3ckHl3iluCwXN
+Slides: https://www.slideshare.net/JohannesWrbach/autoscaling-with-kubernetes
