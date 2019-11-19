@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-api
+  namespace: default
+  labels:
+    app: http-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-api
+  template:
+    metadata:
+      labels:
+        app: http-api
+    spec:
+      containers:
+      - image: johanneswuerbach/k8s-meetup-talk-autoscaling-http-api
+        name: http-api
+        env:
+        - name: PORT
+          value: '3000'
+        envFrom:
+        - configMapRef:
+            name: rabbitmq-defaults
+        - secretRef:
+            name: rabbitmq-default-user
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          requests:
+            cpu: 400m
+            memory: 50Mi
+          limits:
+            memory: 100Mi

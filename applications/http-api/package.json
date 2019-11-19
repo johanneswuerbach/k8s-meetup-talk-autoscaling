@@ -1,0 +1,25 @@
+{
+  "name": "http-api",
+  "version": "1.0.0",
+  "description": "demo http-api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "johannes.wuerbach@googlemail.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johanneswuerbach/k8s-meetup-talk-autoscaling.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johanneswuerbach/k8s-meetup-talk-autoscaling/issues"
+  },
+  "homepage": "https://github.com/johanneswuerbach/k8s-meetup-talk-autoscaling#readme",
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "http-graceful-shutdown": "^2.3.2",
+    "koa": "^2.11.0",
+    "rascal": "^6.0.1"
+  }
+}

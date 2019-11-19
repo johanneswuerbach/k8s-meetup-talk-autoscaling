@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: consumer
+  namespace: monitoring
+spec:
+  groups:
+  - name: meetup-consumer-default.rules
+    rules:
+    - record: meetup_queue_messages
+      expr: |
+        max(rabbitmq_queue_messages{queue="meetup"})
+      labels:
+        service: consumer
+        namespace: default

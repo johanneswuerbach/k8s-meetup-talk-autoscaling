@@ -1,0 +1,21 @@
+# The required headless service for StatefulSets
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: default
+  labels:
+    app: rabbitmq
+spec:
+  ports:
+  - port: 5672
+    name: amqp
+  - port: 4369
+    name: epmd
+  - port: 25672
+    name: rabbitmq-dist
+  - port: 9419
+    name: http-metrics
+  clusterIP: None
+  selector:
+    app: rabbitmq

@@ -1,0 +1,23 @@
+kind: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2beta2
+metadata:
+  name: consumer
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: consumer
+  minReplicas: 1
+  maxReplicas: 50
+  metrics:
+  - type: Object
+    object:
+      describedObject:
+        kind: Service
+        name: consumer
+      target:
+        type: Value
+        averageValue: 2
+      metric:
+        name: meetup_queue_messages

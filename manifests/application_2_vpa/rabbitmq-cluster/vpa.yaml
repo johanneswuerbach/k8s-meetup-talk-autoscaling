@@ -1,0 +1,22 @@
+apiVersion: autoscaling.k8s.io/v1beta2
+kind: VerticalPodAutoscaler
+metadata:
+  name: rabbitmq
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: rabbitmq
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: rabbitmq
+      maxAllowed:
+        memory: 4096Mi
+        cpu: 1000m
+    - containerName: rabbitmq-monitoring
+      maxAllowed:
+        memory: 512Mi
+        cpu: 500m

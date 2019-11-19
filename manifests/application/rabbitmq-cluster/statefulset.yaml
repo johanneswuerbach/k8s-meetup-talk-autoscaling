@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  namespace: default
+spec:
+  serviceName: rabbitmq
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      serviceAccountName: rabbitmq
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - rabbitmq
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+      initContainers:
+      - name: copy-rabbitmq-config
+        image: busybox
+        command:
+        - sh
+        - -c
+        - cp /configmap/* /etc/rabbitmq
+        volumeMounts:
+        - name: configmap
+          mountPath: /configmap
+        - name: config
+          mountPath: /etc/rabbitmq
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3.7.17-management-alpine
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                until rabbitmqctl node_health_check; do sleep 1; done; rabbitmqctl set_policy ha-two "." '{"ha-mode":"exactly","ha-params":2,"ha-sync-mode":"automatic"}'
+        livenessProbe:
+          exec:
+            command:
+            - rabbitmqctl
+            - status
+          initialDelaySeconds: 90
+          periodSeconds: 60
+          timeoutSeconds: 15
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - rabbitmq-diagnostics -q node_health_check && rabbitmq-diagnostics -q
+              check_port_connectivity
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 10
+          successThreshold: 2
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: meetup
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-config
+              key: default-password
+        - name: RABBITMQ_ERLANG_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-config
+              key: erlang-cookie
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: RABBITMQ_NODENAME
+          value: rabbit@$(POD_NAME).rabbitmq.default.svc.cluster.local
+        - name: RABBITMQ_USE_LONGNAME
+          value: "true"
+        - name: K8S_HOSTNAME_SUFFIX
+          value: .rabbitmq.default.svc.cluster.local
+        - name: K8S_SERVICE_NAME
+          value: rabbitmq
+        - name: K8S_ADDRESS_TYPE
+          value: hostname
+        ports:
+        - containerPort: 15672
+          name: http
+        - containerPort: 5672
+          name: amqp
+        - containerPort: 4369
+          name: epmd
+        - containerPort: 25672
+          name: rabbitmq-dist
+        volumeMounts:
+        - name: rabbitmq
+          mountPath: /var/lib/rabbitmq
+        - name: config
+          mountPath: /etc/rabbitmq
+        resources:
+          requests:
+            cpu: 250m
+            memory: 200Mi
+      - name: rabbitmq-monitoring
+        image: kbudde/rabbitmq-exporter:v0.29.0
+        ports:
+        - name: http-metrics
+          containerPort: 9419
+        env:
+        - name: RABBIT_USER
+          value: meetup
+        - name: RABBIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-config
+              key: default-password
+        - name: OUTPUT_FORMAT
+          value: JSON
+        - name: RABBIT_CAPABILITIES
+          value: no_sort,bert
+        - name: PUBLISH_PORT
+          value: "9419"
+        - name: SKIP_QUEUES
+          value: ^amq.gen-
+        - name: LOG_LEVEL
+          value: warning
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: configmap
+        configMap:
+          name: rabbitmq-config
+          items:
+          - key: rabbitmq.conf
+            path: rabbitmq.conf
+          - key: enabled_plugins
+            path: enabled_plugins
+  volumeClaimTemplates:
+  - metadata:
+      name: rabbitmq
+      labels:
+        app: rabbitmq
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 30Gi

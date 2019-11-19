@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  namespace: default
+  labels:
+    app: consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - image: johanneswuerbach/k8s-meetup-talk-autoscaling-consumer
+        name: consumer
+        envFrom:
+        - configMapRef:
+            name: rabbitmq-defaults
+        - secretRef:
+            name: rabbitmq-default-user
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            memory: 100Mi
+

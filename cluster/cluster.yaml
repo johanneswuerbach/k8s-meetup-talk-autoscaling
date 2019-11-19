@@ -1,0 +1,42 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: k8s-meetup
+  region: eu-central-1
+  version: "1.14"
+
+nodeGroups:
+  - name: ng-a
+    availabilityZones: ["eu-central-1a"]
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 15
+    ssh:
+      allow: true
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+  - name: ng-b
+    availabilityZones: ["eu-central-1b"]
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 15
+    ssh:
+      allow: true
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+  - name: ng-c
+    availabilityZones: ["eu-central-1c"]
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 15
+    ssh:
+      allow: true
+    iam:
+      withAddonPolicies:
+        autoScaler: true
